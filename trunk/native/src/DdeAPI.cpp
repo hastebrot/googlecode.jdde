@@ -202,6 +202,8 @@ HDDEDATA CALLBACK DdeCallback(
 	UINT idInst = env->CallStaticIntMethod(CallbackManager, mGetIdInst, idThread);
 
 	jobject jobj;
+	jbyteArray bArray;
+	jobjectArray sArray;
 	jobject parameter = WrapCallbackParameters(env, idInst, idThread, uType,
 			uFmt, hconv, hsz1, hsz2, hdata, dwData1, dwData2);
 
@@ -213,7 +215,7 @@ HDDEDATA CALLBACK DdeCallback(
 	case XTYP_ADVREQ:
 	case XTYP_REQUEST:
 		jobj = env->CallStaticObjectMethod(CallbackManager, mDataCallback, parameter);
-		jbyteArray bArray = (jbyteArray) jobj;
+		bArray = (jbyteArray) jobj;
 
 		if (bArray != NULL) {
 			jsize cb = env->GetArrayLength(bArray);
@@ -224,7 +226,7 @@ HDDEDATA CALLBACK DdeCallback(
 		break;
 	case XTYP_WILDCONNECT:
 		jobj = env->CallStaticObjectMethod(CallbackManager, mWildConnectCallback, parameter);
-		jobjectArray sArray = (jobjectArray) jobj;
+		sArray = (jobjectArray) jobj;
 
 		if (sArray != NULL) {
 			jsize cb = env->GetArrayLength(sArray);
