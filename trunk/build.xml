@@ -1,0 +1,89 @@
+<?xml version="1.0" ?>
+
+<project name="jDDE" basedir="." default="main">
+
+	<taskdef resource="cpptasks.tasks"/>
+
+	<property environment="env"/>
+	<property name="jdk.home" location="${env.JAVA_HOME}"/>
+
+	<property name="build.dir" location="${basedir}/build" />
+	<property name="nDDE.dir" location="${basedir}/native" />
+	<property name="jDDE.dir" location="${basedir}/java" />
+
+	<property name="nDDE.src.dir" location="${nDDE.dir}/src" />
+	<property name="nDDE.bin.dir" location="${build.dir}/native" />
+
+	<property name="jDDE.src.dir" location="${jDDE.dir}/src" />
+	<property name="jDDE.bin.dir" location="${build.dir}/java" />
+
+	<target name="clean-before">
+		<delete dir="${build.dir}" />
+	</target>
+
+	<target name="compile-native">
+		<delete dir="${nDDE.bin.dir}"/>
+		<mkdir dir="${nDDE.bin.dir}"/>
+		<mkdir dir="${nDDE.bin.dir}/obj"/>
+
+		<cc name="gcc" outtype="shared" outfile="${nDDE.bin.dir}/jDDE" objdir="${nDDE.bin.dir}/obj" >
+			<compiler>
+				<includepath location="${jdk.home}/include" />
+				<includepath location="${jdk.home}/include/win32" />
+			</compiler>
+			<linker>
+				<linkerarg value="-Wl,--add-stdcall-alias" />
+			</linker>
+			<fileset dir="${nDDE.src.dir}" includes="*.cpp" />
+		</cc>
+
+		<move file="${nDDE.bin.dir}/libjDDE.so" tofile="${build.dir}/jDDE.dll" />
+	</target>
+
+	<target name="compile-java">
+		<delete dir="${jDDE.bin.dir}"/>
+		<mkdir dir="${jDDE.bin.dir}"/>
+		<javac srcdir="${jDDE.src.dir}" destdir="${jDDE.bin.dir}" />
+	</target>
+
+	<target name="jar" depends="compile-java">
+		<tstamp>
+			<format property="now" pattern="yyyy-MM-dd HH:mm:ss" />
+			<format property="version.num" pattern="yyyyMMdd" />
+		</tstamp>
+		
+		<copy todir="${jDDE.bin.dir}">
+			<fileset dir="${jDDE.src.dir}" excludes="**/*.java"/>
+		</copy>
+
+		<jar destfile="${build.dir}/jDDE.jar" basedir="${jDDE.bin.dir}">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Built-Date" value="${now}"/>
+				<attribute name="Implementation-Title" value="jDDE" />
+				<attribute name="Implementation-Version" value="${version.num}" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="zip" depends="compile-native, jar">
+		<tstamp>
+			<format property="version.num" pattern="yyyyMMdd" />
+		</tstamp>
+
+		<copy file="${basedir}/LICENSE" todir="${build.dir}" />
+		<copy file="${basedir}/WHATSNEW" todir="${build.dir}" />
+		<zip
+			destfile="${build.dir}/jDDE-${version.num}.zip"
+			basedir="${build.dir}"
+			includes="jDDE.dll,jDDE.jar,LICENSE,WHATSNEW" />
+	</target>
+
+	<target name="clean-after">
+		<delete dir="${nDDE.bin.dir}" />
+		<delete dir="${jDDE.bin.dir}" />
+	</target>
+
+	<target name="main" depends="clean-before, zip, clean-after" />
+
+</project>

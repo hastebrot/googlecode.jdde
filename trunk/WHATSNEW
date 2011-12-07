@@ -1,0 +1,27 @@
+Changes from jDDE 0.2 to jDDE-20091105
+======================================
+
+* Fixed a bug in the ErrorEvent hierarchy.
+
+* Replaced WildConnectEvent with ConnectEvent, since they were the same.
+
+* A few minor improvements.
+
+* DmlError.properties file is now being copied into jar file.
+
+Changes from jDDE 0.1 to jDDE 0.2
+=================================
+
+* Complete asynchronous transaction support (REQUEST, EXECUTE, POKE).
+
+* Added ERROR transaction support (critical error handling).
+
+* Servers can turn service name initiation filtering on and off.
+
+* Servers now support WILDCONNECT transactions.
+
+* Added DISCONNECT support on both client and server sides.
+
+* Added support to REGISTER and UNREGISTER transactions on both client and server sides.
+
+* Added ADVISE support on the server side.

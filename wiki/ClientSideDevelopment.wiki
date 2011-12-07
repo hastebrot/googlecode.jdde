@@ -1,0 +1,160 @@
+#summary Client side development of DDE applications.
+#labels Featured
+
+= Introduction =
+
+_missing_
+
+= Conversation Management =
+
+_missing_
+
+== Identifying conversation disconnects ==
+
+If you need to identify when a conversation has been disconnected you can register a `ClientDisconnectListener` like this:
+
+{{{
+String service, topic;
+
+...
+
+DdeClient client = new DdeClient();
+ClientConversation conv = client.connect(service, topic);
+conv.setDisconnectListener(new ClientDisconnectListener() {
+	public void onDisconnect(ClientDisconnectEvent e) {
+		...
+		// do whatever you want when conversation is disconnected
+	}
+});
+}}}
+
+= Transaction Management =
+
+After establishing a conversation with a server, a client can send transactions to obtain data and services from the server. These transactions are listed below.
+
+== Request Transaction ==
+
+A client application can use the *Request Transaction* to request a data item from a server application.
+
+{{{
+String service, topic, item;
+
+...
+
+DdeClient client = new DdeClient();
+ClientConversation conv = client.connect(service, topic);
+byte[] data = conv.request(item);
+}}}
+
+There is also an overloaded method that allows you to specify the clipboard format and timeout of the transaction. If the server does not process this transaction, it will throw a `DmlError.NOTPROCESSED` exception.
+
+== Poke Transaction ==
+
+A client can send unsolicited data to a server by sending the *Poke Transaction* to a server application.
+
+{{{
+String service, topic, item;
+byte[] data;
+
+...
+
+DdeClient client = new DdeClient();
+ClientConversation conv = client.connect(service, topic);
+conv.poke(item, data);
+}}}
+
+There is also an overloaded method that allows you to specify the clipboard format and timeout of the transaction. If the server rejected the transaction, a `DmlError.NOTPROCESSED` will be thrown. If the server was too busy to answer the transaction, you will get a `DmlError.BUSY` exception. In this last case, the client should send the transaction again later.
+
+== Advise Transaction ==
+
+A client application can use the *Advise Transaction* to establish one or more links to items in a server application. When such a link has been established, the server sends periodic updates about the linked item to the client (typically, whenever the value of the item associated with the server application changes). Linking establishes an advise loop between the two applications that remains in place until the client ends it.
+
+{{{
+String service, topic, item;
+
+...
+
+DdeClient client = new DdeClient();
+ClientConversation conv = client.connect(service, topic);
+
+Advise advise = conv.startAdvise(item, new AdviseDataListener() {
+
+	@Override
+	public void valueChanged(AdviseDataEvent event) {
+		byte[] data = event.getData();
+		...
+	}
+
+});
+
+// receive data for 10 seconds
+Thread.sleep(10000);
+
+// stop the advise transaction
+advise.stop();
+
+// it is also possible to get the last value received
+byte[] data = advise.getLastValue();
+}}}
+
+There is also an overloaded method that allows you to specify the clipboard format and timeout of the transaction. If the server rejected the transaction, a `DmlError.NOTPROCESSED` will be thrown.
+
+== Execute Transaction ==
+
+A client can use the *Execute Transaction* to cause a server to execute a command or a series of commands.
+
+{{{
+String service, topic, command;
+
+...
+
+DdeClient client = new DdeClient();
+ClientConversation conv = client.connect(service, topic);
+conv.execute(command);
+}}}
+
+There is also an overloaded method that allows you to specify the timeout of the transaction. If the server rejected the transaction, a `DmlError.NOTPROCESSED` will be thrown. If the server was too busy to answer the transaction, you will get a `DmlError.BUSY` exception. In this last case, the client should send the transaction again later.
+
+== Synchronous and Asynchronous Transactions ==
+
+A client can send either synchronous or asynchronous transactions. In a synchronous transaction, the client specifies a time-out value that indicates the maximum amount of time it will wait for the server to process the transaction. The transaction does not return until the server processes the transaction, the transaction fails, or the time-out value expires. The client can specify the time-out value using one of the overloaded methods of the transaction.
+
+During a synchronous transaction, the client enters a modal loop while waiting for the transaction to be processed. The client can still process user input but cannot send another synchronous transaction within the same conversation until the previous transaction returns.
+
+A client sends an asynchronous transaction by invoking the _Async_ version of the transaction methods (`requestAsync`, `executeAsync`, `pokeAsync`). The function returns after the transaction has begun, passing a `AsyncTransaction` object to the client. When the server finishes processing the asynchronous transaction, a `AsyncTransactionEvent` will be handled by the `AsyncTransactionListener` instance that was supplied to the asynchronous transaction method.
+
+If a server does not process an asynchronous transaction in a timely manner, the client can abandon the transaction by invoking the `abandon` method on the `AsyncTransaction` instance. The DDEML natively releases all resources associated with the transaction and discards the results of the transaction when the server finishes processing it. A time-out during a synchronous transaction effectively cancels the transaction.
+
+{{{
+String service, topic, item;
+
+...
+
+DdeClient client = new DdeClient();
+ClientConversation conv = client.connect(service, topic);
+
+AsyncTransaction asyncTx = conv.requestAsync(item, new AsyncTransactionListener() {
+
+	@Override
+	public void onError(AsyncTransactionEvent e) {
+		// handle error
+		...
+	}
+
+	@Override
+	public void onSuccess(AsyncTransactionEvent e) {
+		byte[] data = e.getData();
+		...
+	}
+
+});
+
+...
+
+// can abandon a transaction if needed
+asyncTx.abandon();
+}}}
+
+The asynchronous transaction method is provided for applications that must send a high volume of DDE transactions while simultaneously performing a substantial amount of processing, such as performing calculations. The asynchronous method is also useful in applications that must stop processing DDE transactions temporarily so they can complete other tasks without interruption. In most other situations, an application should use the synchronous method.
+
+Synchronous transactions are simpler to maintain and are faster than asynchronous transactions. However, only one synchronous transaction can be performed at a time, whereas many asynchronous transactions can be performed simultaneously. With synchronous transactions, a slow server can cause a client to remain idle while it is waiting for a response. Also, synchronous transactions cause the client to enter a modal loop that could bypass message filtering in the application's own message loop.

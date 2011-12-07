@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+
+<project name="jDDE" basedir=".">
+
+	<taskdef resource="cpptasks.tasks"/>
+
+	<property environment="env"/>
+	<property name="jdk.home" location="${env.JAVA_HOME}"/>
+
+	<property name="jDDE.dir" location="${basedir}" />
+	<property name="nDDE.dir" location="${basedir}/../nDDE" />
+
+	<property name="nDDE.src.dir" location="${nDDE.dir}/src" />
+
+	<property name="jDDE.src.dir" location="${jDDE.dir}/src" />
+	<property name="jDDE.bin.dir" location="${jDDE.dir}/bin" />
+	<property name="jDDE.build.dir" location="${jDDE.dir}/build" />
+
+	<target name="clean">
+		<delete dir="${jDDE.build.dir}" />
+	</target>
+	
+	<target name="compile-headers" depends="clean">
+		<mkdir dir="${jDDE.build.dir}" />
+
+		<javah destdir="${jDDE.build.dir}" force="yes" verbose="yes">
+			<classpath>
+				<path location="${jDDE.bin.dir}" />
+			</classpath>
+			<class name="com.google.code.jdde.ddeml.DdeAPI" />
+			<class name="com.google.code.jdde.ddeml.WinAPI" />
+		</javah>
+
+		<move file="${jDDE.build.dir}/com_google_code_jdde_ddeml_DdeAPI.h"
+			tofile="${nDDE.src.dir}/DdeAPI.h" />
+		<move file="${jDDE.build.dir}/com_google_code_jdde_ddeml_WinAPI.h"
+			tofile="${nDDE.src.dir}/WinAPI.h" />
+	</target>
+
+	<target name="compile-dll" depends="clean">
+		<mkdir dir="${jDDE.build.dir}/obj" />
+
+		<cc name="gcc" outtype="shared" outfile="${jDDE.build.dir}/jDDE" objdir="${jDDE.build.dir}/obj" >
+			<compiler>
+				<includepath location="${jdk.home}/include" />
+				<includepath location="${jdk.home}/include/win32" />
+			</compiler>
+			<linker>
+				<linkerarg value="-Wl,--add-stdcall-alias" />
+			</linker>
+			<fileset dir="${nDDE.src.dir}" includes="*.cpp" />
+		</cc>
+
+		<move file="${jDDE.build.dir}/libjDDE.so" tofile="${jDDE.dir}/jDDE.dll" />
+	</target>
+
+</project>
