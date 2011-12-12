@@ -90,7 +90,7 @@ JNIEXPORT jint JNICALL Java_com_google_code_jdde_ddeml_DdeAPI_Connect
 	UtilFreeStringHandle(idInst, hszService);
 	UtilFreeStringHandle(idInst, hszTopic);
 
-	return (UINT) hConv;
+	return (UINT64) hConv;
 }
 
 JNIEXPORT jboolean JNICALL Java_com_google_code_jdde_ddeml_DdeAPI_Disconnect
