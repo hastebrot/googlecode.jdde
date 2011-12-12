@@ -1,3 +1,12 @@
+Changes from jDDE-20091105 to jDDE-20111212
+===========================================
+
+* Fixed a compilation error with gcc 4.5.
+
+* Fixed casting error for the 64-bit dll.
+
+* Added both 32-bit and 64-bit dlls.
+
 Changes from jDDE 0.2 to jDDE-20091105
 ======================================
 
