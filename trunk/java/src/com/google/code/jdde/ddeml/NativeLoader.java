@@ -26,7 +26,11 @@ class NativeLoader {
 	
 	public static synchronized void load() {
 		if (!loaded) {
-			System.loadLibrary("jDDE");
+		    int bits = 32;
+	        if (System.getProperty("os.arch").indexOf("64") != -1) {
+	            bits = 64;
+	        }
+	        System.loadLibrary("jDDE_" + bits);
 			loaded = true;
 		}
 	}
