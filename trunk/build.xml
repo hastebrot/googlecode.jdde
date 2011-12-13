@@ -1,89 +1,119 @@
 <?xml version="1.0" ?>
+<project name="jdde" default="main" basedir=".">
+    <!-- ======================================================================= -->
+    <!-- PROPERTIES.                                                             -->
+    <!-- ======================================================================= -->
+    
+    <property environment="env" />
+    <property name="jdk.home" location="${env.JAVA_HOME}" />
+	
+    <!-- ======================================================================= -->
+    <!-- PATH PROPERTIES.                                                        -->
+    <!-- ======================================================================= -->
+    
+    <property name="path.src.native" location="${basedir}/native/src" />
+    <property name="path.src.java" location="${basedir}/java/src" />
 
-<project name="jDDE" basedir="." default="main">
+    <property name="path.build" location="${basedir}/build" />
+    <property name="path.build.native" location="${basedir}/build/native" />
+    <property name="path.build.java" location="${basedir}/build/java" />
+    
+    <!-- ======================================================================= -->
+    <!-- TASK DEFINITIONS.                                                       -->
+    <!-- ======================================================================= -->
+    
+	<taskdef resource="cpptasks.tasks" />
 
-	<taskdef resource="cpptasks.tasks"/>
+    <!-- ======================================================================= -->
+    <!-- COMPILE TARGETS.                                                        -->
+    <!-- ======================================================================= -->
+	
+	<target name="-compile-native">
+        <delete dir="${path.build.native}" />
+        <mkdir dir="${path.build.native}" />
+        <mkdir dir="${path.build.native}/obj" />
+        <cc name="gcc" outtype="shared" 
+                outfile="${path.build.native}/jdde" 
+                objdir="${path.build.native}/obj">
+            <compiler>
+                <includepath location="${jdk.home}/include" />
+                <includepath location="${jdk.home}/include/win32" />
+            </compiler>
+            <linker>
+                <linkerarg value="-Wl,--add-stdcall-alias" />
+            </linker>
+            <fileset dir="${path.src.native}" includes="*.cpp" />
+        </cc>
+    </target>
+    
+    <target name="compile-native-32" depends="-compile-native">
+        <move file="${path.build.native}/libjdde.so" 
+        	tofile="${path.build}/jdde_32.dll" />
+    </target>
+    
+    <target name="compile-native-64" depends="-compile-native">
+        <move file="${path.build.native}/libjdde.so" 
+        	tofile="${path.build}/jdde_64.dll" />
+    </target>
 
-	<property environment="env"/>
-	<property name="jdk.home" location="${env.JAVA_HOME}"/>
+    <target name="compile-java">
+        <delete dir="${path.build.java}"/>
+        <mkdir dir="${path.build.java}"/>
+        <javac srcdir="${path.src.java}" destdir="${path.build.java}" />
+    </target>
+	
+    <!-- ======================================================================= -->
+    <!-- PACKAGING TARGETS.                                                      -->
+    <!-- ======================================================================= -->
+	
+    <target name="-timestamp">
+        <tstamp>
+            <format property="timestamp.now" pattern="yyyy-MM-dd HH:mm:ss" />
+            <format property="version.num" pattern="yyyyMMdd" />
+        </tstamp>
+    </target>
+	
+    <target name="jar" depends="-timestamp, compile-java">
+        <jar destfile="${path.build}/jdde-${version.num}.jar" 
+        	    basedir="${path.build.java}">
+            <manifest>
+                <attribute name="Build-By" value="${user.name}" />
+                <attribute name="Build-Date" value="${timestamp.now}"/>
+                <attribute name="Implementation-Title" value="jdde" />
+                <attribute name="Implementation-Version" value="${version.num}" />
+            </manifest>
+        </jar>
+    </target>
+	
+    <target name="jar-sources" depends="-timestamp">
+        <jar destfile="${path.build}/jdde-${version.num}-sources.jar" 
+              basedir="${path.src.java}" includes="**/*.java">
+        </jar>
+    </target>
 
-	<property name="build.dir" location="${basedir}/build" />
-	<property name="nDDE.dir" location="${basedir}/native" />
-	<property name="jDDE.dir" location="${basedir}/java" />
-
-	<property name="nDDE.src.dir" location="${nDDE.dir}/src" />
-	<property name="nDDE.bin.dir" location="${build.dir}/native" />
-
-	<property name="jDDE.src.dir" location="${jDDE.dir}/src" />
-	<property name="jDDE.bin.dir" location="${build.dir}/java" />
-
+    <target name="zip" depends="jar">
+        <tstamp>
+            <format property="version.num" pattern="yyyyMMdd" />
+        </tstamp>
+        <copy file="${basedir}/LICENSE" todir="${path.build}" />
+        <copy file="${basedir}/WHATSNEW" todir="${path.build}" />
+        <zip
+            destfile="${path.build}/jdde-${version.num}.zip"
+            basedir="${build.dir}"
+            includes="${path.build}/jdde-${version.num}.jar,LICENSE,WHATSNEW" />
+    </target>
+	
 	<target name="clean-before">
-		<delete dir="${build.dir}" />
+	    <delete dir="${path.build}" />
 	</target>
-
-	<target name="compile-native">
-		<delete dir="${nDDE.bin.dir}"/>
-		<mkdir dir="${nDDE.bin.dir}"/>
-		<mkdir dir="${nDDE.bin.dir}/obj"/>
-
-		<cc name="gcc" outtype="shared" outfile="${nDDE.bin.dir}/jDDE" objdir="${nDDE.bin.dir}/obj" >
-			<compiler>
-				<includepath location="${jdk.home}/include" />
-				<includepath location="${jdk.home}/include/win32" />
-			</compiler>
-			<linker>
-				<linkerarg value="-Wl,--add-stdcall-alias" />
-			</linker>
-			<fileset dir="${nDDE.src.dir}" includes="*.cpp" />
-		</cc>
-
-		<move file="${nDDE.bin.dir}/libjDDE.so" tofile="${build.dir}/jDDE.dll" />
-	</target>
-
-	<target name="compile-java">
-		<delete dir="${jDDE.bin.dir}"/>
-		<mkdir dir="${jDDE.bin.dir}"/>
-		<javac srcdir="${jDDE.src.dir}" destdir="${jDDE.bin.dir}" />
-	</target>
-
-	<target name="jar" depends="compile-java">
-		<tstamp>
-			<format property="now" pattern="yyyy-MM-dd HH:mm:ss" />
-			<format property="version.num" pattern="yyyyMMdd" />
-		</tstamp>
-		
-		<copy todir="${jDDE.bin.dir}">
-			<fileset dir="${jDDE.src.dir}" excludes="**/*.java"/>
-		</copy>
-
-		<jar destfile="${build.dir}/jDDE.jar" basedir="${jDDE.bin.dir}">
-			<manifest>
-				<attribute name="Built-By" value="${user.name}" />
-				<attribute name="Built-Date" value="${now}"/>
-				<attribute name="Implementation-Title" value="jDDE" />
-				<attribute name="Implementation-Version" value="${version.num}" />
-			</manifest>
-		</jar>
-	</target>
-
-	<target name="zip" depends="compile-native, jar">
-		<tstamp>
-			<format property="version.num" pattern="yyyyMMdd" />
-		</tstamp>
-
-		<copy file="${basedir}/LICENSE" todir="${build.dir}" />
-		<copy file="${basedir}/WHATSNEW" todir="${build.dir}" />
-		<zip
-			destfile="${build.dir}/jDDE-${version.num}.zip"
-			basedir="${build.dir}"
-			includes="jDDE.dll,jDDE.jar,LICENSE,WHATSNEW" />
-	</target>
-
+	
 	<target name="clean-after">
-		<delete dir="${nDDE.bin.dir}" />
-		<delete dir="${jDDE.bin.dir}" />
+	    <delete dir="${path.build.native}" />
+	    <delete dir="${path.build.java}" />
 	</target>
 
-	<target name="main" depends="clean-before, zip, clean-after" />
+	<target name="native32" depends="compile-native-32" />
+	<target name="native64" depends="compile-native-64" />
+    <target name="main" depends="clean-before, native32, jar, jar-sources, clean-after" />
 
 </project>
