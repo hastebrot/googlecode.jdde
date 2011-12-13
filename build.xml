@@ -28,22 +28,6 @@
     <!-- COMPILE TARGETS.                                                        -->
     <!-- ======================================================================= -->
 	
-    <target name="compile-headers" depends="compile-java">
-    	<delete dir="${path.build.native}" />
-        <mkdir dir="${path.build.native}" />
-        <javah destdir="${path.build.native}" force="yes" verbose="yes">
-            <classpath>
-                <path location="${path.build.java}" />
-            </classpath>
-            <class name="com.google.code.jdde.ddeml.DdeAPI" />
-            <class name="com.google.code.jdde.ddeml.WinAPI" />
-        </javah>
-        <move file="${path.build.native}/com_google_code_jdde_ddeml_DdeAPI.h"
-            tofile="${path.src.native}/DdeAPI.h" />
-        <move file="${path.build.native}/com_google_code_jdde_ddeml_WinAPI.h"
-            tofile="${path.src.native}/WinAPI.h" />
-    </target>
-	
 	<target name="-compile-native">
         <delete dir="${path.build.native}" />
         <mkdir dir="${path.build.native}" />
@@ -76,6 +60,22 @@
         <delete dir="${path.build.java}"/>
         <mkdir dir="${path.build.java}"/>
         <javac srcdir="${path.src.java}" destdir="${path.build.java}" />
+    </target>
+    
+    <target name="compile-headers" depends="compile-java">
+        <delete dir="${path.build.native}" />
+        <mkdir dir="${path.build.native}" />
+        <javah destdir="${path.build.native}" force="yes" verbose="yes">
+            <classpath>
+                <path location="${path.build.java}" />
+            </classpath>
+            <class name="com.google.code.jdde.ddeml.DdeAPI" />
+            <class name="com.google.code.jdde.ddeml.WinAPI" />
+        </javah>
+        <move file="${path.build.native}/com_google_code_jdde_ddeml_DdeAPI.h"
+            tofile="${path.src.native}/DdeAPI.h" />
+        <move file="${path.build.native}/com_google_code_jdde_ddeml_WinAPI.h"
+            tofile="${path.src.native}/WinAPI.h" />
     </target>
 	
     <!-- ======================================================================= -->
