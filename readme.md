@@ -20,7 +20,7 @@ Install all requirements (don't forget to choose the C++ Compiler while installi
         
 Compile the DDE wrapper.
 
-        C:\>cd googlecode.jdde\trunk
+        C:\>cd googlecode.jdde
         C:\>set JAVA_HOME=C:\Program Files\Java\jdk1.6.0_25
         C:\>set PATH=C:\MinGW\bin;%PATH%
         C:\>gcc --version
@@ -35,25 +35,27 @@ That's all folks!
   - WIN64 Downloads > Personal Builds > sezero_4.5_20111101
   - WIN32 Downloads > Personal Builds > sezero_4.5_20111101
 
-### Compiling on an x86-windows host
+### Compile on an x86-windows host (32bit)
 
-- jdde_32.dll (native compiler)
-  - mingw-w32-bin_i686-mingw_20111101_sezero.zip
-- jdde_64.dll (cross compiler)
-  - mingw-w64-bin_i686-mingw_20111101_sezero.zip
+Download and unpack following files.
 
-### Compiling on an x64-windows host
+- mingw-w32-bin_i686-mingw_20111101_sezero.zip
+- mingw-w64-bin_i686-mingw_20111101_sezero.zip
 
-- jdde_32.dll (using cross compiler)
-  - <?no compiler available?>
-- jdde_64.dll (using native compiler)
-  - mingw-w64-bin_x86_64-mingw_20111101_sezero.zip
+Set environment variables.
   
-### Compile the DDE wrapper.
-
+        C:\>cd googlecode.jdde
         C:\>set JAVA_HOME=C:\Program Files\Java\jdk1.6.0_25
         C:\>set MINGW_32=C:\_MINGW\mingw-w32-bin_i686-mingw_20111101_sezero\mingw32
         C:\>set MINGW_64=C:\_MINGW\mingw-w64-bin_i686-mingw_20111101_sezero\mingw64
+        
+Compile jdde_32.dll and jdde_64.dll.
+        
         C:\>set PATH=%MINGW_32%\bin;%PATH%
+        C:\>ant native32
         C:\>set PATH=%MINGW_64%\bin;%PATH%
-        C:\>ant
+        C:\>ant native64
+
+Create a zipped package.
+
+        C:\>ant zip

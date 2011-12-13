@@ -6,7 +6,7 @@
     
     <property environment="env" />
     <property name="jdk.home" location="${env.JAVA_HOME}" />
-	
+    
     <!-- ======================================================================= -->
     <!-- PATH PROPERTIES.                                                        -->
     <!-- ======================================================================= -->
@@ -22,13 +22,13 @@
     <!-- TASK DEFINITIONS.                                                       -->
     <!-- ======================================================================= -->
     
-	<taskdef resource="cpptasks.tasks" />
+    <taskdef resource="cpptasks.tasks" />
 
     <!-- ======================================================================= -->
     <!-- COMPILE TARGETS.                                                        -->
     <!-- ======================================================================= -->
-	
-	<target name="-compile-native">
+    
+    <target name="-compile-native">
         <delete dir="${path.build.native}" />
         <mkdir dir="${path.build.native}" />
         <mkdir dir="${path.build.native}/obj" />
@@ -48,12 +48,12 @@
     
     <target name="compile-native-32" depends="-compile-native">
         <move file="${path.build.native}/libjdde.so" 
-        	tofile="${path.build}/jdde_32.dll" />
+            tofile="${path.build}/jdde_32.dll" />
     </target>
     
     <target name="compile-native-64" depends="-compile-native">
         <move file="${path.build.native}/libjdde.so" 
-        	tofile="${path.build}/jdde_64.dll" />
+            tofile="${path.build}/jdde_64.dll" />
     </target>
 
     <target name="compile-java">
@@ -77,21 +77,21 @@
         <move file="${path.build.native}/com_google_code_jdde_ddeml_WinAPI.h"
             tofile="${path.src.native}/WinAPI.h" />
     </target>
-	
+    
     <!-- ======================================================================= -->
     <!-- PACKAGING TARGETS.                                                      -->
     <!-- ======================================================================= -->
-	
+    
     <target name="-timestamp">
         <tstamp>
             <format property="timestamp.now" pattern="yyyy-MM-dd HH:mm:ss" />
             <format property="version.num" pattern="yyyyMMdd" />
         </tstamp>
     </target>
-	
+    
     <target name="jar" depends="-timestamp, compile-java">
         <jar destfile="${path.build}/jdde-${version.num}.jar" 
-        	    basedir="${path.build.java}">
+                basedir="${path.build.java}">
             <manifest>
                 <attribute name="Build-By" value="${user.name}" />
                 <attribute name="Build-Date" value="${timestamp.now}"/>
@@ -100,7 +100,7 @@
             </manifest>
         </jar>
     </target>
-	
+    
     <target name="jar-sources" depends="-timestamp">
         <jar destfile="${path.build}/jdde-${version.num}-sources.jar" 
               basedir="${path.src.java}" includes="**/*.java">
@@ -112,8 +112,8 @@
         <copy file="${basedir}/WHATSNEW" todir="${path.build}" />
         <zip destfile="${path.build}/jdde-${version.num}.zip">
             <fileset dir="${path.build}">
-            	<include name="jdde_*.dll" />
-            	<include name="jdde-${version.num}.jar" />
+                <include name="jdde_*.dll" />
+                <include name="jdde-${version.num}.jar" />
                 <include name="jdde-${version.num}.jar" />
                 <include name="jdde-${version.num}-sources.jar" />
                 <include name="LICENSE" />
@@ -121,18 +121,17 @@
             </fileset>
         </zip>
     </target>
-	
-	<target name="clean-before">
-	    <delete dir="${path.build}" />
-	</target>
-	
-	<target name="clean-after">
-	    <delete dir="${path.build.native}" />
-	    <delete dir="${path.build.java}" />
-	</target>
+    
+    <target name="clean-before">
+        <delete dir="${path.build}" />
+    </target>
+    
+    <target name="clean-after">
+        <delete dir="${path.build.native}" />
+        <delete dir="${path.build.java}" />
+    </target>
 
-	<target name="native32" depends="compile-native-32" />
-	<target name="native64" depends="compile-native-64" />
+    <target name="native32" depends="compile-native-32" />
+    <target name="native64" depends="compile-native-64" />
     <target name="main" depends="clean-before, native32, jar, jar-sources, clean-after" />
-
 </project>
