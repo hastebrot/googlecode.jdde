@@ -11,12 +11,12 @@
     <!-- PATH PROPERTIES.                                                        -->
     <!-- ======================================================================= -->
     
-    <property name="path.src.native" location="${basedir}/native/src" />
-    <property name="path.src.java" location="${basedir}/java/src" />
+    <property name="path.src.native" location="${basedir}/src/native" />
+    <property name="path.src.java" location="${basedir}/src/java/main" />
 
-    <property name="path.build" location="${basedir}/build" />
-    <property name="path.build.native" location="${basedir}/build/native" />
-    <property name="path.build.java" location="${basedir}/build/java" />
+    <property name="path.build" location="${basedir}/target" />
+    <property name="path.build.native" location="${basedir}/target/native" />
+    <property name="path.build.java" location="${basedir}/target/java" />
     
     <!-- ======================================================================= -->
     <!-- TASK DEFINITIONS.                                                       -->
@@ -27,6 +27,22 @@
     <!-- ======================================================================= -->
     <!-- COMPILE TARGETS.                                                        -->
     <!-- ======================================================================= -->
+	
+    <target name="compile-headers" depends="compile-java">
+    	<delete dir="${path.build.native}" />
+        <mkdir dir="${path.build.native}" />
+        <javah destdir="${path.build.native}" force="yes" verbose="yes">
+            <classpath>
+                <path location="${path.build.java}" />
+            </classpath>
+            <class name="com.google.code.jdde.ddeml.DdeAPI" />
+            <class name="com.google.code.jdde.ddeml.WinAPI" />
+        </javah>
+        <move file="${path.build.native}/com_google_code_jdde_ddeml_DdeAPI.h"
+            tofile="${path.src.native}/DdeAPI.h" />
+        <move file="${path.build.native}/com_google_code_jdde_ddeml_WinAPI.h"
+            tofile="${path.src.native}/WinAPI.h" />
+    </target>
 	
 	<target name="-compile-native">
         <delete dir="${path.build.native}" />
@@ -91,16 +107,19 @@
         </jar>
     </target>
 
-    <target name="zip" depends="jar">
-        <tstamp>
-            <format property="version.num" pattern="yyyyMMdd" />
-        </tstamp>
+    <target name="zip" depends="jar, jar-sources">
         <copy file="${basedir}/LICENSE" todir="${path.build}" />
         <copy file="${basedir}/WHATSNEW" todir="${path.build}" />
-        <zip
-            destfile="${path.build}/jdde-${version.num}.zip"
-            basedir="${build.dir}"
-            includes="${path.build}/jdde-${version.num}.jar,LICENSE,WHATSNEW" />
+        <zip destfile="${path.build}/jdde-${version.num}.zip">
+            <fileset dir="${path.build}">
+            	<include name="jdde_*.dll" />
+            	<include name="jdde-${version.num}.jar" />
+                <include name="jdde-${version.num}.jar" />
+                <include name="jdde-${version.num}-sources.jar" />
+                <include name="LICENSE" />
+                <include name="WHATSNEW" />
+            </fileset>
+        </zip>
     </target>
 	
 	<target name="clean-before">
