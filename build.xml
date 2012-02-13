@@ -1,11 +1,18 @@
 <?xml version="1.0" ?>
-<project name="jdde" default="main" basedir=".">
+<project name="com-googlecode-jdde" default="main" basedir=".">
     <!-- ======================================================================= -->
     <!-- PROPERTIES.                                                             -->
     <!-- ======================================================================= -->
     
     <property environment="env" />
     <property name="jdk.home" location="${env.JAVA_HOME}" />
+    
+    <!--property name="project.name" value="${ant.project.name}" /-->
+    <property name="project.name" value="jdde" />
+    <tstamp>
+        <format property="project.version" pattern="yyyyMMdd" />
+        <format property="project.timestamp" pattern="yyyy-MM-dd HH:mm:ss" />
+    </tstamp>
     
     <!-- ======================================================================= -->
     <!-- PATH PROPERTIES.                                                        -->
@@ -17,6 +24,7 @@
     <property name="path.build" location="${basedir}/target" />
     <property name="path.build.native" location="${basedir}/target/native" />
     <property name="path.build.java" location="${basedir}/target/java" />
+    <property name="path.build.javadoc" location="${basedir}/target/javadoc" />
     
     <!-- ======================================================================= -->
     <!-- TASK DEFINITIONS.                                                       -->
@@ -78,60 +86,73 @@
             tofile="${path.src.native}/WinAPI.h" />
     </target>
     
+    <target name="compile-javadoc">
+        <delete dir="${path.build.javadoc}"/>
+        <mkdir dir="${path.build.javadoc}"/>
+        <javadoc destdir="${path.build.javadoc}"
+                sourcepath="${path.src.java}"
+                packagenames="**.*"
+                author="true"
+                version="true"
+                use="true"
+                private="true" />
+    </target>
+    
     <!-- ======================================================================= -->
     <!-- PACKAGING TARGETS.                                                      -->
     <!-- ======================================================================= -->
     
-    <target name="-timestamp">
-        <tstamp>
-            <format property="timestamp.now" pattern="yyyy-MM-dd HH:mm:ss" />
-            <format property="version.num" pattern="yyyyMMdd" />
-        </tstamp>
-    </target>
-    
-    <target name="jar" depends="-timestamp, compile-java">
-        <jar destfile="${path.build}/jdde-${version.num}.jar" 
+    <target name="jar" depends="compile-java">
+        <jar destfile="${path.build}/${project.name}-${project.version}.jar" 
                 basedir="${path.build.java}">
             <manifest>
                 <attribute name="Build-By" value="${user.name}" />
-                <attribute name="Build-Date" value="${timestamp.now}"/>
-                <attribute name="Implementation-Title" value="jdde" />
-                <attribute name="Implementation-Version" value="${version.num}" />
+                <attribute name="Build-Date" value="${project.timestam}"/>
+                <attribute name="Implementation-Title" value="${project.name}" />
+                <attribute name="Implementation-Version" value="${project.version}" />
             </manifest>
         </jar>
     </target>
     
-    <target name="jar-sources" depends="-timestamp">
-        <jar destfile="${path.build}/jdde-${version.num}-sources.jar" 
-              basedir="${path.src.java}" includes="**/*.java">
-        </jar>
+    <target name="jar-javadoc" depends="compile-javadoc">
+        <jar destfile="${path.build}/${project.name}-${project.version}-javadoc.jar" 
+              basedir="${path.build.javadoc}" />
     </target>
-
-    <target name="zip" depends="jar, jar-sources">
+    
+    <target name="jar-sources">
+        <jar destfile="${path.build}/${project.name}-${project.version}-sources.jar" 
+              basedir="${path.src.java}" includes="**/*.java" />
+    </target>
+    
+    <target name="zip" depends="jar, jar-javadoc, jar-sources">
         <copy file="${basedir}/LICENSE" todir="${path.build}" />
         <copy file="${basedir}/WHATSNEW" todir="${path.build}" />
-        <zip destfile="${path.build}/jdde-${version.num}.zip">
+        <zip destfile="${path.build}/${project.name}-${project.version}.zip">
             <fileset dir="${path.build}">
+                <include name="${project.name}-${project.version}.jar" />
+                <include name="${project.name}-${project.version}-javadoc.jar" />
+                <include name="${project.name}-${project.version}-sources.jar" />
                 <include name="jdde_*.dll" />
-                <include name="jdde-${version.num}.jar" />
-                <include name="jdde-${version.num}.jar" />
-                <include name="jdde-${version.num}-sources.jar" />
                 <include name="LICENSE" />
                 <include name="WHATSNEW" />
             </fileset>
         </zip>
     </target>
     
+    <!-- ======================================================================= -->
+    <!-- HELPER TARGETS.                                                         -->
+    <!-- ======================================================================= -->
+    
     <target name="clean-before">
         <delete dir="${path.build}" />
     </target>
-    
     <target name="clean-after">
         <delete dir="${path.build.native}" />
         <delete dir="${path.build.java}" />
+        <delete dir="${path.build.javadoc}" />
     </target>
 
     <target name="native32" depends="compile-native-32" />
     <target name="native64" depends="compile-native-64" />
-    <target name="main" depends="clean-before, native32, jar, jar-sources, clean-after" />
+    <target name="main" depends="clean-before, native32, zip, clean-after" />
 </project>

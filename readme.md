@@ -49,7 +49,7 @@ Set environment variables.
         C:\>set MINGW_32=C:\_MINGW\mingw-w32-bin_i686-mingw_20111101_sezero\mingw32
         C:\>set MINGW_64=C:\_MINGW\mingw-w64-bin_i686-mingw_20111101_sezero\mingw64
         
-Compile jdde_32.dll and jdde_64.dll.
+Compile jdde_32.dll (native compiled) and jdde_64.dll (cross compiled).
         
         C:\>set PATH=%MINGW_32%\bin;%PATH%
         C:\>ant native32
